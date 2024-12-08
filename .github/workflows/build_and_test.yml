@@ -31,4 +31,4 @@ jobs:
           cd build
           make
       - name: StartTesting
-          ./build/project_tp
+        run: ./build/project_tp
