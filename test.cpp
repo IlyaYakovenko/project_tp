@@ -1,8 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
 #include <vector>
-#include <chrono>
-#include <numeric>
+#include <random>
 #include "sort_parallel.cpp"
 
 using namespace templates;
@@ -19,67 +18,50 @@ int Compare(const S* l, const S* r) {
     return diff;
 }
 
-TEST_CASE("merge") {
-    std::vector<double> res;
-    for (int k = 0; k < 50; k++) {
-        const int n = 1000000;
-        std::vector<S *> v(n);
+std::vector<S> generateRandomVector(int size, int minValue, int maxValue) {
+    std::vector<S> vec(size);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(minValue, maxValue);
 
-        std::vector<S> data(n);
-        for (int i = 0; i < n; ++i) {
-            data[i] = {i % 17 + i % 8, i % 5};
-        }
+    for (auto& element : vec) {
+        element.n1 = dis(gen);
+        element.n2 = dis(gen);
+    }
+
+    return vec;
+}
+
+TEST_CASE("merge") {
+    for (int n = 1000; n < 100000000; n *= 10) {
+        std::cout << "Размер массива: " << n << "\n";
+        std::vector<S *> v(n);
+        std::vector<S> data = generateRandomVector(n, 1, 1000);
         for (int i = 0; i < n; ++i) {
             v[i] = data.data() + i;
         }
-        std::cout << "до сортировки: " << std::endl;
-        auto start = std::chrono::high_resolution_clock::now();
+        std::cout << "Массив создан, начинаю сортировку слиянием" << "\n";
         mergeSort<S>(v.data(), n, Compare);
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
-        std::cout << "после сортировки: " << elapsed.count() << std::endl;
-        res.push_back(elapsed.count());
         for (int i = 0; i + 1 < n; ++i) {
             CHECK(Compare(v[i], v[i + 1]) >= 0);
         }
+        std::cout << "Массив отсортирован!" << "\n";
     }
-
-    double sum = std::accumulate(res.begin(), res.end(), 0.0);
-
-    // Нахождение среднего значения
-    double average = sum / res.size();
-
-    std::cout << "Среднее значение: " << average << std::endl;
 }
 
 TEST_CASE("quick") {
-    std::vector<double> res;
-    for (int k = 0; k < 50; k++) {
-        const int n = 100000;
+    for (int n = 1000; n < 100000000; n *= 10) {
+        std::cout << "Размер массива: " << n << "\n";
         std::vector<S *> v(n);
-
-        std::vector<S> data(n);
-        for (int i = 0; i < n; ++i) {
-            data[i] = {i % 17 + i % 8, i % 5};
-        }
+        std::vector<S> data = generateRandomVector(n, 1, 1000);
         for (int i = 0; i < n; ++i) {
             v[i] = data.data() + i;
         }
-        auto start = std::chrono::high_resolution_clock::now();
+        std::cout << "Массив создан, начинаю быструю сортировку" << "\n";
         quickSort<S>(v.data(), n, Compare);
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
-        std::cout << "после сортировки: " << elapsed.count() << std::endl;
-        res.push_back(elapsed.count());
         for (int i = 0; i + 1 < n; ++i) {
             CHECK(Compare(v[i], v[i + 1]) >= 0);
         }
+        std::cout << "Массив отсортирован!" << "\n";
     }
-
-    double sum = std::accumulate(res.begin(), res.end(), 0.0);
-
-    // Нахождение среднего значения
-    double average = sum / res.size();
-
-    std::cout << "Среднее значение: " << average << std::endl;
 }
